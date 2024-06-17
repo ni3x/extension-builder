@@ -68,7 +68,7 @@ jobs:
 
             console.log(`Individual modules: ${numIndividualModules} (${numIndividualChunks} chunks of ${chunkSize})`);
 
-            core.setOutput('individualMatrix', { 'chunk': [...Array(numIndividualChunks).keys()] });
+            core.setOutput('individualMatrix', JSON.stringify({ chunk: [...Array(numIndividualChunks).keys()] }));
 
   build_all:
     name: Build all sources
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chunk: ${{ fromJSON(needs.prepare.outputs.individualMatrix) }}
+        chunk: ${{ fromJSON(needs.prepare.outputs.individualMatrix).chunk }}
     steps:
       - name: Check inputs
         if: env.REPO == ''
