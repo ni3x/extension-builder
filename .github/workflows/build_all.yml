@@ -75,7 +75,8 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJSON(needs.prepare.outputs.individualMatrix) }}
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.individualMatrix) }}
     steps:
       - name: Check inputs
         if: env.REPO == ''
@@ -107,3 +108,23 @@ jobs:
           name: "individual-apks-${{ matrix.chunk }}"
           path: "**/*.apk"
           retention-days: 1
+
+      - name: Check out target branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPO }}
+          ref: apk-branch
+          fetch-depth: 0
+
+      - name: Move APKs to target branch
+        run: |
+          mkdir -p apks/chunk-${{ matrix.chunk }}
+          mv **/*.apk apks/chunk-${{ matrix.chunk }}
+
+      - name: Commit and push APKs
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add apks/chunk-${{ matrix.chunk }}
+          git commit -m "Add APKs for chunk ${{ matrix.chunk }}"
+          git push origin apk-branch
